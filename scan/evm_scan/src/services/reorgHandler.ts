@@ -17,6 +17,10 @@ export class ReorgHandler {
 
   /**
    * 检查区块链重组并处理
+   * @description by hy
+   * 这里校验并处理了重组
+   * 校验逻辑是：对比数据库中的区块高度和hash值与从节点查询链上的是否一致，这里还要对比连续性
+   * 处理逻辑是：
    */
   async checkAndHandleReorg(currentBlock: number, currentHash: string): Promise<ReorgInfo | null> {
     try {

@@ -202,6 +202,9 @@ export class ViemClient {
 
   /**
    * 获取指定区块范围内涉及用户地址的ERC20转账日志
+   * @description by hy
+   * 过滤支持的token下的相关用户的交易信息，即token & address
+   * 这里使用ETH节点的内部的bloom过滤器
    */
   async getERC20TransfersToUsers(
     fromBlock: number | 'latest',
@@ -215,6 +218,7 @@ export class ViemClient {
       }
 
       // Transfer(address indexed from, address indexed to, uint256 value)
+      // Point by hy: 这里标记一下，这个是Transfer的事件签名，每个事件都有唯一的签名，在日志中过滤需要使用签名
       const transferTopic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
       const logs = await this.currentClient.getLogs({
@@ -251,6 +255,15 @@ export class ViemClient {
 
   /**
    * 批量获取多个区块的用户相关转账
+   * @description by hy
+   * 地址可能是ERC20的，也可能是ETH的，所以分两步走：
+   * 1. 先查ERC20的相关(代币token或address相关)转账日志
+   * 2. 再查ETH区块中的address相关的转账(transactions)信息
+   * 这里的扫链是纯Demo级的，是用已有的用户地址去RPC节点上匹配，在用户地址很多的场景下（几万条感觉都支撑不了）是无法工作的。
+   * 生产级的做法是，建立用户address的哈希内存表（比如Redis的Set，百万用户也才占100-200内存），
+   * 然后通过遍历新的区块上的交易地址，去Set中匹配是否存在。当然在这之前先用bloom过滤器过滤掉大多数不相关的交易（比如非USDT的）
+   * Redis的set查询速度是微秒级的，如果用户再多，可以轻松使用分片的方式扩展，将不用的用户分散到多个Redis Set中
+   * 当然，这种扫链方案的重组处理又是另一套方案了
    */
   async getUserTransfersInBlocks(
     fromBlock: number,

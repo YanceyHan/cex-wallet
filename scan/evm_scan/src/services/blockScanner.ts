@@ -78,6 +78,9 @@ export class BlockScanner {
 
   /**
    * 执行初始同步扫描
+   * @description by hy
+   * 从数据库获取最后扫描的区块号
+   * 从链上获取当前最新区块号
    */
   private async performInitialSync(): Promise<void> {
     logger.info('开始初始同步扫描...');
@@ -140,6 +143,8 @@ export class BlockScanner {
 
   /**
    * 扫描区块批次 - 智能选择最优处理策略
+   * @description by hy
+   * 当end区块远小于finalized区块时（通过batchSize配置），使用历史分析模式
    */
   private async scanBlockBatchStrategy(startBlock: number, endBlock: number): Promise<void> {
     const batchSize = endBlock - startBlock + 1;
@@ -172,6 +177,9 @@ export class BlockScanner {
 
   /**
    * 批量扫描区块（兼容所有批次大小，支持 bloom 过滤器优化）
+   * @description by hy
+   * 对比历史分析模式，就是多了重组的校验和处理
+   * 然后区块数据和存款数据是一起存的，没看出来有什么区别
    */
   private async scanBlockBatch(startBlock: number, endBlock: number): Promise<void> {
     try {
@@ -267,6 +275,9 @@ export class BlockScanner {
 
   /**
    * 历史分析模式扫描区块（适用于 finalized 区块，最高效）
+   * @description by hy
+   * 对比普通模式，就是少了重组的校验和处理
+   * 区块数据和存款数据是分开存的，没看出来有什么区别
    */
   private async scanBlockBatchHistorical(startBlock: number, endBlock: number): Promise<void> {
     try {
@@ -329,6 +340,8 @@ export class BlockScanner {
 
   /**
    * 扫描单个区块
+   * @description by hy
+   * 没什么必要的兜底策略，他这个兜底做的不好，是在catch中进行的，也可能是为了简单吧
    */
   private async scanSingleBlock(blockNumber: number): Promise<void> {
     try {
@@ -374,6 +387,8 @@ export class BlockScanner {
 
   /**
    * 处理有效区块 - 使用事务确保数据一致性
+   * @description by hy
+   * 功能重复了，是为了处理单个区块的，程序设计不够友好
    */
   private async processValidBlock(blockNumber: number, block: any): Promise<void> {
     try {

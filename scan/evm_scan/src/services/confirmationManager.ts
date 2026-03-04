@@ -75,6 +75,8 @@ export class ConfirmationManager {
 
   /**
    * 处理交易确认（混合策略: POS 网络终结性 和 区块确认数）
+   * @description by hy
+   * 就是修改已经扫到的交易的后续状态
    */
   async processConfirmations(): Promise<void> {
     try {
@@ -91,7 +93,6 @@ export class ConfirmationManager {
       });
 
       // 决定使用的确认策略
-      //TODO hy 这里看下是要确认什么东西，以及确认的时机，为什么要确认
       if (config.useNetworkFinality && this.networkSupportsFinality) {
         await this.processWithNetworkFinality(pendingTransactions);
       } else {

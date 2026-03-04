@@ -40,6 +40,13 @@ export class TransactionAnalyzer {
   /**
    * 优化版区块分析：使用 bloom 过滤器预筛选相关交易
    * 通过 getLogs 和地址过滤，只获取与用户地址相关的转账事件，避免逐笔分析所有交易
+   * @description by hy
+   * 解析单个区块的
+   * 解析一共有3处：
+   * 当前函数
+   * 解析多个块的：analyzeBatchBlocksForDeposits
+   * 解析历史的：analyzeHistoricalBlocks
+   * 感觉设计有点混乱
    */
   async analyzeBlock(blockNumber: number): Promise<DepositTransaction[]> {
     try {
@@ -133,7 +140,6 @@ export class TransactionAnalyzer {
       const tokenAddressList = Array.from(this.supportedTokens.keys()).filter(key => key !== 'native');
 
       // 批量获取多个区块的相关转账（使用 bloom 过滤器预筛选）
-      // TODO hy 如何用 bloom 过滤器预筛选？
       const transferData = await viemClient.getUserTransfersInBlocks(
         fromBlock,
         toBlock,
@@ -144,7 +150,6 @@ export class TransactionAnalyzer {
       // 处理ERC20转账日志
       for (const log of transferData.erc20Logs) {
         try {
-          // TODO hy
           const deposit = await this.processERC20TransferLog(log);
           if (deposit) {
             deposits.push(deposit);
@@ -161,7 +166,6 @@ export class TransactionAnalyzer {
       // 处理ETH转账
       for (const ethTx of transferData.ethTransactions) {
         try {
-          // TODO hy
           const deposit = await this.processEthTransfer(ethTx);
           if (deposit) {
             deposits.push(deposit);
@@ -332,6 +336,8 @@ export class TransactionAnalyzer {
 
   /**
    * 加载用户地址列表
+   * @description by hy
+   * 一次性查出所有地址，有点儿戏
    */
   private async loadUserAddresses(): Promise<void> {
     try {
@@ -348,6 +354,8 @@ export class TransactionAnalyzer {
 
   /**
    * 加载支持的代币列表（仅当前链）
+   * @description by hy
+   * 一次性查出所有代币，有点儿戏
    */
   private async loadSupportedTokens(): Promise<void> {
     try {
@@ -383,6 +391,8 @@ export class TransactionAnalyzer {
 
   /**
    * 如果需要，刷新缓存（包括数据变化检测）
+   * @description by hy
+   * 这里是主动刷新，一次从库里查一堆数据出来，不是生产级方案
    */
   private async refreshCacheIfNeeded(): Promise<void> {
     const now = Date.now();
@@ -405,6 +415,8 @@ export class TransactionAnalyzer {
 
   /**
    * 检查数据是否有更新（轻量级检查）
+   * @description by hy
+   * 查库如果有新的address或token，则查库查出全量数据，有点儿戏
    */
   private async checkForDataUpdates(): Promise<void> {
     try {
@@ -462,6 +474,9 @@ export class TransactionAnalyzer {
 
   /**
    * 处理ERC20转账日志
+   * @description by hy
+   * 解析ECR20的合约交易
+   * 就是通过客户端解析交易log中的to地址和token是否符合库中的
    */
   private async processERC20TransferLog(log: any, blockNumber?: number): Promise<DepositTransaction | null> {
     try {
@@ -538,6 +553,9 @@ export class TransactionAnalyzer {
 
   /**
    * 处理ETH转账
+   * @description by hy
+   * 解析ETH链上交易
+   * 就是解析区块的交易地址，是否在库中
    */
   private async processEthTransfer(tx: any, blockNumber?: number): Promise<DepositTransaction | null> {
     try {
