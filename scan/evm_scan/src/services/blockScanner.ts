@@ -180,6 +180,8 @@ export class BlockScanner {
    * @description by hy
    * 对比历史分析模式，就是多了重组的校验和处理
    * 然后区块数据和存款数据是一起存的，没看出来有什么区别
+   * 这里重组做的非常简单粗暴，Demo级别，交易直接删了，区块直接标记为孤块
+   * 重组后从共同祖先区块开始重新扫描了
    */
   private async scanBlockBatch(startBlock: number, endBlock: number): Promise<void> {
     try {
@@ -199,7 +201,6 @@ export class BlockScanner {
 
         // 检查重组（只需检查第一个区块，如果有重组会处理整个范围）
         if (blockNumber === startBlock) {
-          // TODO hy 如何判断是重组的？
           reorgInfo = await reorgHandler.checkAndHandleReorg(blockNumber, block.hash!);
           if (reorgInfo) {
             reorgDetected = true;
@@ -225,7 +226,6 @@ export class BlockScanner {
         for (let rescanBlock = rescanStart; rescanBlock <= rescanEnd; rescanBlock++) {
           
           const chainBlock = await viemClient.getBlock(rescanBlock);
-          // TODO hy如何重组的？
           if (chainBlock) {
             await this.processValidBlock(rescanBlock, chainBlock);
           }

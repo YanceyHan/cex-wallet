@@ -20,7 +20,7 @@ export class ReorgHandler {
    * @description by hy
    * 这里校验并处理了重组
    * 校验逻辑是：对比数据库中的区块高度和hash值与从节点查询链上的是否一致，这里还要对比连续性
-   * 处理逻辑是：
+   * 处理逻辑是：把数据库中的区块标记为孤块，如果区块有交易则直接删除交易（？？？）
    */
   async checkAndHandleReorg(currentBlock: number, currentHash: string): Promise<ReorgInfo | null> {
     try {
@@ -53,6 +53,8 @@ export class ReorgHandler {
 
   /**
    * 1. 检测区块链重组（区块哈希连续性验证）
+   * @description by hy
+   * 就查遍历查数据查链上的区块，顺序一个一个的比对hash值
    */
   private async detectReorg(blockNumber: number, chainHash: string): Promise<boolean> {
     try {
@@ -134,6 +136,8 @@ export class ReorgHandler {
 
   /**
    * 2. 寻找共同祖先区块
+   * @description by hy
+   * 还是查遍历查数据查链上的区块，顺序一个一个的比对hash值
    */
   private async findCommonAncestor(startBlock: number): Promise<number> {
     try {
@@ -165,6 +169,8 @@ export class ReorgHandler {
 
   /**
    * 3. 回滚到共同祖先
+   * @description by hy
+   * 区块标记为孤块，如果区块有交易则直接删除交易（？？？）
    */
   private async rollbackToCommonAncestor(commonAncestor: number, currentBlock: number): Promise<ReorgInfo> {
     try {
@@ -241,6 +247,9 @@ export class ReorgHandler {
 
   /**
    * 回滚单个区块
+   * @description by hy
+   * 如果区块没有交易，则标记一下相当于丢弃了
+   * 如果有交易，则删除交易后，标记区块为孤块
    */
   private async rollbackBlock(blockNumber: number): Promise<{ hash: string; transactionCount: number } | null> {
     try {
