@@ -180,8 +180,12 @@ export class BlockScanner {
    * @description by hy
    * 对比历史分析模式，就是多了重组的校验和处理
    * 然后区块数据和存款数据是一起存的，没看出来有什么区别
-   * 这里重组做的非常简单粗暴，Demo级别，交易直接删了，区块直接标记为孤块
+   * 最后做区块确认，就是查链上区块的状态，然后修改数据库中的
+   * 
+   * 这里关于检测链重组有重大问题：检测新块时要对比preHash
+   * 
    * 重组后从共同祖先区块开始重新扫描了
+   * 这里重组做的非常简单粗暴，Demo级别，交易直接删了，区块直接标记为孤块
    */
   private async scanBlockBatch(startBlock: number, endBlock: number): Promise<void> {
     try {

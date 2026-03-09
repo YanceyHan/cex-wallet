@@ -77,6 +77,9 @@ export class ConfirmationManager {
    * 处理交易确认（混合策略: POS 网络终结性 和 区块确认数）
    * @description by hy
    * 就是修改已经扫到的交易的后续状态
+   * 1. 先查数据库中的非稳定状态的区块
+   * 2. 查链上的稳定状态的区块（把链上最后一个稳定区块缓存起来）
+   * 3. 对比后更新数据库（根据配置是否有safe、finalized等状态，或是根据xx个区块）
    */
   async processConfirmations(): Promise<void> {
     try {
